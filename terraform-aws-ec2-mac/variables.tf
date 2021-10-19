@@ -61,17 +61,17 @@ variable "user_data" {
   default     = ""
 }
 
-variable "ssm_parameter" {
+variable "ami_id" {
   description = "SSM Parameter used to lookup the latest EC2 Mac1 AMI"
   type = string
-  default = "/AIS/AMI/Mojave/Id"
+  default = "ami-00703177f48697c84"
 }
 
 variable "host_resource_group_cfn_stack_name" {
   # https://github.pie.apple.com/apay-aws/terraform-aws-dedicated-hosts
   description = "Host Resource Group CFN Stack Created"
   type = string
-  default = "mac1-host-resource-group--striking-kingfish"
+  default = "mac1-host-resource-group-famous-anchovy"
 }
 
 variable "number_of_instances" {
@@ -89,7 +89,7 @@ variable "min_num_instances" {
 variable "max_num_instances" {
   description = "Max number of EC2 Mac1 instances in ASG"
   type        = number
-  default     = 10
+  default     = 3
 }
 
 variable "vpc_id" {
@@ -119,7 +119,7 @@ variable "security_group_ids" {
 variable "mac_ebs_volume_size" {
   description = "EC2 Mac1 EBS volume size"
   type        = number
-  default     = 256
+  default     = 60
 }
 
 variable "worker_prefix" {
@@ -128,11 +128,6 @@ variable "worker_prefix" {
   default     = "ec2"
 }
 
-variable "aws_s3_bucket" {
-  description = "S3 Bucket for Sample App Logs"
-  type = string
-  default = "fruitstand-sampleapp-bucket"
-}
 variable "tags" {
   description = "(Optional) A list of tags to associate with the CloudFormation stack. Does not propagate to the Dedicated Host."
   type        = map(string)

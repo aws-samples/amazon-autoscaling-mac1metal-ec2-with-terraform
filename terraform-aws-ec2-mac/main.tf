@@ -12,10 +12,6 @@ data "template_cloudinit_config" "config" {
   }
 }
 
-# Get latest EC2 Mac AMI from SSM Parameter Store
-data "aws_ssm_parameter" "mac_ami" {
-  name = var.ssm_parameter
-}
 
 resource "random_pet" "mac_workers" {
   length    = 2
@@ -149,8 +145,7 @@ resource "aws_ssm_activation" "ssm_attach" {
 resource "aws_launch_template" "mac_workers" {
   name = random_pet.mac_workers.id
 
-  image_id      = data.aws_ssm_parameter.mac_ami.value
-  #instance_type = "t3.small"
+  image_id      = var.ami_id
   instance_type = "mac1.metal"
   user_data     = join("\n", [data.template_cloudinit_config.config.rendered, var.user_data])
 
@@ -218,97 +213,6 @@ resource "aws_launch_template" "mac_workers" {
   }
 }
 
-resource "aws_lb" "wezjf-test" {
-  name               = "${random_string.str_prefix.result}-lb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups = var.security_group_ids
-  subnets = var.subnet_ids
-
-  # toggle to true will enable alb protection here
-  enable_deletion_protection = false
-  
-  tags = {
-    Name = "${random_pet.mac_workers.id}-alb"
-    CreationTimestamp = timestamp() 
-    Environment = "development"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to tags, e.g. because a management agent
-      # updates these based on some ruleset managed elsewhere.
-      tags,
-    ]
-  }
-}
-
-resource "aws_lb_target_group" "app_tg" {
-  name_prefix   = "${random_string.str_prefix.result}"
-  port          = 8080
-  #protocol = "HTTPS"
-  protocol      = "HTTP"
-  vpc_id        = var.vpc_id
-
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 8
-    timeout             = 10
-    path                = "/hello"
-    protocol            = "HTTP"
-    interval            = 15
-    matcher             = 200
-  }
-
-  deregistration_delay = 300 # time(s) to deregister target from draining to unused "auto-scaling churn rate"
-  load_balancing_algorithm_type = "round_robin"
-
-  tags = {
-    Name = "${random_pet.mac_workers.id}-${random_string.str_prefix.result}-app-tg"
-    CreationTimestamp = timestamp()
-  }
-
-  # Allows for Target Group replacements
-  lifecycle {
-    create_before_destroy = true
-    ignore_changes = [
-      # Ignore changes to tags, e.g. because a management agent
-      # updates these based on some ruleset managed elsewhere.
-      tags,
-    ]
-  }
-}
-
-resource "aws_lb_listener" "app_tg" {
-  load_balancer_arn = aws_lb.wezjf-test.arn
-  # port              = "443"
-  # protocol          = "HTTPS"
-  port = "8080"
-  protocol = "HTTP"
-  #ssl_policy        = "ELBSecurityPolicy-2016-08"
-  #certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
-  # certificate_arn   = aws_acm_certificate.alb_cert.arn
-  #certificate_arn = aws_lb_listener_certificate.app_tg.certificate_arn
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
-  }
-
-  tags = {
-    Name = "${random_pet.mac_workers.id}-${random_string.str_prefix.result}-alb-listner"
-    CreationTimestamp = timestamp()
-  }
-
-  lifecycle {
-    create_before_destroy = true
-    ignore_changes = [
-      # Ignore changes to tags, e.g. because a management agent
-      # updates these based on some ruleset managed elsewhere.
-      tags,
-    ]
-  }
-}
 
 resource "aws_autoscaling_group" "mac_workers" {
   name = random_pet.mac_workers.id
