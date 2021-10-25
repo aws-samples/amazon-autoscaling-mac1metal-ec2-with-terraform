@@ -68,7 +68,6 @@ variable "ami_id" {
 }
 
 variable "host_resource_group_cfn_stack_name" {
-  # https://github.pie.apple.com/apay-aws/terraform-aws-dedicated-hosts
   description = "Host Resource Group CFN Stack Created"
   type = string
   default = "mac1-host-resource-group-famous-anchovy"
