@@ -142,10 +142,25 @@ resource "aws_ssm_activation" "ssm_attach" {
   depends_on         = [aws_iam_role_policy_attachment.ssm_attach]
 }
 
+data "aws_ami" "mac" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["amzn-ec2-macos-10.15*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["amazon"]
+}
+
 resource "aws_launch_template" "mac_workers" {
   name = random_pet.mac_workers.id
-
-  image_id      = var.ami_id
+  #Can specify the ami in var
+  #image_id      = var.ami_id
+  #Or get the AMI use version
+  image_id           = data.aws_ami.mac.id
   instance_type = "mac1.metal"
   user_data     = join("\n", [data.template_cloudinit_config.config.rendered, var.user_data])
 
@@ -301,10 +316,10 @@ resource "aws_autoscaling_group" "mac_workers" {
 
 # AWS ALB ASG Attachment (alternative is inline ASG resource)
 # Ref: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment
-resource "aws_autoscaling_attachment" "mac_workers" {
-  autoscaling_group_name = aws_autoscaling_group.mac_workers.id
-  alb_target_group_arn   = aws_lb_target_group.app_tg.arn
-}
+#resource "aws_autoscaling_attachment" "mac_workers" {
+#  autoscaling_group_name = aws_autoscaling_group.mac_workers.id
+#  alb_target_group_arn   = aws_lb_target_group.app_tg.arn
+#}
 
 ## Auto-Scaling Policy based on CloudWatch Metric CPUUtilization
 resource "aws_autoscaling_policy" "mac_workers" {
