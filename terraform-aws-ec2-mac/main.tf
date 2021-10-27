@@ -169,7 +169,11 @@ resource "aws_launch_template" "mac_workers" {
   }
   
   # Ref: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template
-  vpc_security_group_ids = slice(var.security_group_ids, 0, length(var.security_group_ids)) # Security Group IDs for ASG in non-default vpc
+  #leverage Variables to list security groups
+  #vpc_security_group_ids = slice(var.security_group_ids, 0, length(var.security_group_ids)) # Security Group IDs for ASG in non-default vpc
+  #use terraform code to create security groups
+  vpc_security_group_ids = [aws_security_group.apple_remote_desktop.id]
+
   # module.web_server_sg.security_group_id
   #vpc_security_group_ids = slice(module.web_server_sg.security_group_id, 0, length(module.web_server_sg.security_group_id))
 
@@ -416,5 +420,55 @@ resource "aws_cloudwatch_metric_alarm" "mac_workers" {
 
   tags = {
     "Terraform" = random_pet.mac_workers.id
+  }
+}
+
+
+resource "aws_security_group" "apple_remote_desktop" {
+  name        = "sg_apple_remote_desktop"
+  description = "Allow Apple Desktop Traffic"
+  vpc_id      = var.vpc_id
+
+  ingress = [
+    {
+      description = "SSH over 22"
+      from_port   = 0
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = var.management_subnet
+      ipv6_cidr_blocks = []
+      prefix_list_ids = []
+      security_groups = []
+      self = false
+    },
+    {
+      description = "VNC for ARD"
+      from_port   = 0
+      to_port     = 5900
+      protocol    = "tcp"
+      cidr_blocks = var.management_subnet
+      ipv6_cidr_blocks = []
+      prefix_list_ids = []
+      security_groups = []
+      self = false
+    }
+  ]
+
+  egress = [
+    {
+      description      = "Allow all outbound traffic"
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids = []
+      security_groups = []
+      self = false
+    }
+  ]
+
+  tags = {
+    Name = "remote desktop connection"
   }
 }

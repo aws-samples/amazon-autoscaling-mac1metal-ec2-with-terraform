@@ -132,3 +132,15 @@ variable "tags" {
   type        = map(string)
   default     = null
 }
+
+variable "management_subnet" {
+  description = "Allow access from management subnet"
+  type = list(string)
+  default = []
+}
+
+variable "key_name" {
+  description = "SSH key"
+  type = string
+  default = ""
+}
