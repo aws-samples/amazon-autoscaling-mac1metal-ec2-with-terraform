@@ -343,40 +343,6 @@ resource "aws_autoscaling_policy" "mac_workers" {
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "mac_workers" {
-  alarm_name          = "${random_string.str_prefix.result}-sampleapp-load"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "40"
-
-  insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"  # toggle to ignore inst health insufficient data durg long ec2 mac1 boots
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.mac_workers.name
-  }
-
-  alarm_description = "This metric monitors ec2 mac1 cpu utilization"
-  alarm_actions     = [aws_autoscaling_policy.mac_workers.arn]
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to tags, e.g. because a management agent
-      # updates these based on some ruleset managed elsewhere.
-      tags,
-    ]
-  }
-
-  tags = {
-    "Terraform" = random_pet.mac_workers.id
-  }
-}
-
-
 resource "aws_security_group" "apple_remote_desktop" {
   name        = "sg_apple_remote_desktop"
   description = "Allow Apple Desktop Traffic"

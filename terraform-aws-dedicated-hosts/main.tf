@@ -7,7 +7,7 @@ resource "random_pet" "host_resource_group" {
 resource "aws_licensemanager_license_configuration"  "license_config"{  
   name                     = "MyRequiredLicense"
   description              = "Pass through configuration for Host Resource Group"
-  license_count            = 1000
+  license_count            = 32
   license_count_hard_limit = false
   license_counting_type    = "Core"
 }
