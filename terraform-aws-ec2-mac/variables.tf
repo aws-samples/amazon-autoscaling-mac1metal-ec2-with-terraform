@@ -118,7 +118,7 @@ variable "security_group_ids" {
 variable "mac_ebs_volume_size" {
   description = "EC2 Mac1 EBS volume size"
   type        = number
-  default     = 60
+  default     = 100
 }
 
 variable "worker_prefix" {
